@@ -22,10 +22,12 @@ import {
 } from "lucide-react";
 import "./index.css";
 
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+
 // Data Fetcher
 const fetchMetrics = async () => {
   try {
-    const { data } = await axios.get("http://localhost:5000/api/metrics", {
+    const { data } = await axios.get(`${API_URL}/api/metrics`, {
       withCredentials: true,
     });
 
@@ -41,12 +43,12 @@ const fetchMetrics = async () => {
 
 function App() {
   const handleLogin = () => {
-    window.location.href = "http://localhost:5000/auth/github";
+    window.location.href = `${API_URL}/auth/github`;
   };
 
   const logout = async () => {
     await axios.post(
-      "http://localhost:5000/logout",
+      `${API_URL}/logout`,
       {},
       {
         withCredentials: true,
