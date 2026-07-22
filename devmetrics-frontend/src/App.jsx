@@ -23,28 +23,46 @@ import {
 import "./index.css";
 
 // Data Fetcher
-const fetchMetrics = async (token) => {
-  const { data } = await axios.get("http://localhost:5000/api/metrics", {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  return data;
+const fetchMetrics = async () => {
+  try {
+    const { data } = await axios.get("http://localhost:5000/api/metrics", {
+      withCredentials: true,
+    });
+
+    return data;
+  } catch (err) {
+    if (err.response?.status === 401) {
+      throw new Error("UNAUTHORIZED");
+    }
+
+    throw err;
+  }
 };
 
 function App() {
-  const urlParams = new URLSearchParams(window.location.search);
-  const token = urlParams.get("token");
-
   const handleLogin = () => {
     window.location.href = "http://localhost:5000/auth/github";
   };
 
-  const { data, isLoading, isError, refetch, isFetching } = useQuery({
-    queryKey: ["metrics", token],
-    queryFn: () => fetchMetrics(token),
-    enabled: !!token,
+  const logout = async () => {
+    await axios.post(
+      "http://localhost:5000/logout",
+      {},
+      {
+        withCredentials: true,
+      },
+    );
+
+    window.location.reload();
+  };
+
+  const { data, isLoading, isError, error, refetch, isFetching } = useQuery({
+    queryKey: ["metrics"],
+    queryFn: fetchMetrics,
+    retry: false,
   });
 
-  if (!token) {
+  if (error?.message === "UNAUTHORIZED") {
     return (
       <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center text-white p-4">
         <div className="max-w-md text-center space-y-6">
@@ -105,29 +123,41 @@ function App() {
               alt={metrics.login}
               className="w-14 h-14 rounded-full border-2 border-blue-500"
             />
+
             <div>
               <h1 className="text-2xl font-bold flex items-center gap-2">
                 {metrics.login}
+
                 <span className="text-xs bg-slate-800 text-slate-400 px-2.5 py-1 rounded-full font-normal border border-slate-700">
                   {isCached ? "⚡ Cached Data" : "🌐 Live GitHub API"}
                 </span>
               </h1>
+
               <p className="text-slate-400 text-sm">
                 Developer Productivity Overview
               </p>
             </div>
           </div>
 
-          <button
-            onClick={() => refetch()}
-            disabled={isFetching}
-            className="self-start md:self-auto flex items-center gap-2 bg-slate-900 hover:bg-slate-800 border border-slate-800 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-          >
-            <RefreshCw
-              className={`w-4 h-4 ${isFetching ? "animate-spin" : ""}`}
-            />
-            Refresh Data
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={() => refetch()}
+              disabled={isFetching}
+              className="flex items-center gap-2 bg-slate-900 hover:bg-slate-800 disabled:opacity-50 border border-slate-800 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+            >
+              <RefreshCw
+                className={`w-4 h-4 ${isFetching ? "animate-spin" : ""}`}
+              />
+              Refresh Data
+            </button>
+
+            <button
+              onClick={logout}
+              className="bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+            >
+              Logout
+            </button>
+          </div>
         </header>
 
         {/* Top Stat Cards */}
