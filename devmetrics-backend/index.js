@@ -64,7 +64,7 @@ app.get("/auth/github/callback", async (req, res) => {
     res.cookie("github_token", accessToken, {
       httpOnly: true,
       secure: true, // true when deployed with HTTPS
-      sameSite: "none",
+      sameSite: "lax",
       maxAge: 24 * 60 * 60 * 1000,
     });
 
@@ -80,10 +80,13 @@ app.get("/auth/github/callback", async (req, res) => {
 // ======================
 
 app.post("/logout", (req, res) => {
-  res.clearCookie("github_token");
-  res.json({
-    success: true,
+  res.clearCookie("github_token", {
+    httpOnly: true,
+    secure: true,
+    sameSite: "lax",
+    path: "/",
   });
+  res.json({ success: true });
 });
 
 // ======================
