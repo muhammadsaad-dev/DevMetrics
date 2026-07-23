@@ -62,8 +62,8 @@ app.get("/auth/github/callback", async (req, res) => {
 
     res.cookie("github_token", accessToken, {
       httpOnly: true,
-      secure: false, // true when deployed with HTTPS
-      sameSite: "lax",
+      secure: true, // true when deployed with HTTPS
+      sameSite: "none",
       maxAge: 24 * 60 * 60 * 1000,
     });
 
